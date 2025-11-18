@@ -17,6 +17,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 from src.config_manager import load_config
@@ -95,6 +96,14 @@ def create_app() -> FastAPI:
     # ルーターを登録
     app.include_router(router, prefix="/api/v1", tags=["Multi-Agent"])
     
+    # 静的ファイル（UI）の配信
+    ui_dir = Path(__file__).parent / "ui"
+    if ui_dir.exists():
+        app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
+        logger.info(f"UIディレクトリをマウントしました: {ui_dir}")
+    else:
+        logger.warning(f"UIディレクトリが見つかりません: {ui_dir}")
+    
     # 起動時イベント
     @app.on_event("startup")
     async def startup_event():
@@ -110,6 +119,7 @@ def create_app() -> FastAPI:
             logger.info(f"  {i}. {worker.name} ({worker.model})")
         logger.info("=" * 60)
         logger.info("サーバーが起動しました")
+        logger.info("Web UI: http://localhost:8000/ui/")
         logger.info("API ドキュメント: http://localhost:8000/docs")
         logger.info("=" * 60)
     
@@ -132,6 +142,7 @@ def create_app() -> FastAPI:
         return {
             "message": "OllamaSimpleHub - マルチエージェント・アンサンブルシステム",
             "version": "1.0.0",
+            "ui": "/ui/",
             "docs": "/docs",
             "api_prefix": "/api/v1",
             "endpoints": {

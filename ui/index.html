@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OllamaSimpleHub - マルチエージェントチャット</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- KaTeX CSS for math rendering (local) -->
+    <link rel="stylesheet" href="libs/katex.min.css">
+    <!-- KaTeX JS (local) -->
+    <script defer src="libs/katex.min.js"></script>
+    <!-- marked.js for Markdown rendering (local) -->
+    <script src="libs/marked.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1>OllamaSimpleHub</h1>
+            <p class="subtitle">複数のAIエージェントが協力して最適な回答を生成します</p>
+        </header>
+
+        <!-- コントロールエリア -->
+        <div class="controls">
+            <button id="reset-button" class="control-button" title="会話履歴をクリア">
+                🔄 会話をリセット
+            </button>
+            <span id="status-indicator" class="status-indicator">
+                <span class="status-dot"></span>
+                <span id="status-text">準備完了</span>
+            </span>
+        </div>
+
+        <!-- チャットコンテナ -->
+        <div id="chat-container" class="chat-container">
+            <div class="welcome-message">
+                <h2>👋 ようこそ！</h2>
+                <p>質問を入力してください。複数のAIエージェントが協力して回答します。</p>
+            </div>
+        </div>
+
+        <!-- 入力エリア -->
+        <div class="input-area">
+            <form id="chat-form" class="chat-form">
+                <input 
+                    type="text" 
+                    id="user-input" 
+                    class="user-input" 
+                    placeholder="質問を入力してください..."
+                    maxlength="10000"
+                    autocomplete="off"
+                    required
+                />
+                <button 
+                    type="submit" 
+                    id="send-button" 
+                    class="send-button"
+                    disabled
+                >
+                    <span class="button-text">送信</span>
+                    <span class="button-icon">📤</span>
+                </button>
+            </form>
+            <div class="input-info">
+                <span id="char-count">0 / 10000</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,812 @@
+/* ===========================
+   グローバルスタイル
+   =========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* カラーパレット */
+    --primary-color: #4a90e2;
+    --primary-dark: #357abd;
+    --secondary-color: #7b68ee;
+    --success-color: #5cb85c;
+    --error-color: #d9534f;
+    --warning-color: #f0ad4e;
+    
+    /* 背景色 */
+    --bg-main: #f5f7fa;
+    --bg-white: #ffffff;
+    --bg-user: #e3f2fd;
+    --bg-assistant: #f9f9f9;
+    --bg-worker: #f0f0f0;
+    --bg-review: #fff9e6;
+    --bg-final: #fffde7;
+    
+    /* テキスト色 */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    
+    /* ボーダー */
+    --border-color: #e0e0e0;
+    --border-radius: 8px;
+    
+    /* シャドウ */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+    
+    /* スペーシング */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
+                 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-main);
+    overflow: hidden;
+}
+
+/* ===========================
+   コンテナ
+   =========================== */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--bg-white);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===========================
+   ヘッダー
+   =========================== */
+
+.header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+}
+
+.subtitle {
+    font-size: 14px;
+    opacity: 0.95;
+}
+
+/* ===========================
+   コントロールエリア
+   =========================== */
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.control-button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    color: var(--text-primary);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-button:hover {
+    background-color: var(--bg-main);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--success-color);
+    animation: pulse 2s infinite;
+}
+
+.status-dot.loading {
+    background-color: var(--warning-color);
+}
+
+.status-dot.error {
+    background-color: var(--error-color);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ===========================
+   チャットコンテナ
+   =========================== */
+
+.chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+    background-color: var(--bg-main);
+    scroll-behavior: smooth;
+}
+
+.welcome-message {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+
+.welcome-message h2 {
+    font-size: 24px;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+/* ===========================
+   メッセージバブル
+   =========================== */
+
+.message {
+    display: flex;
+    margin-bottom: var(--spacing-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.assistant {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 75%;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.message.user .message-content {
+    background-color: var(--bg-user);
+    border: 1px solid #bbdefb;
+}
+
+.message.assistant .message-content {
+    background-color: var(--bg-assistant);
+    border: 1px solid var(--border-color);
+}
+
+.message-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.message-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+}
+
+/* Markdownコンテンツのスタイリング */
+.message-text h1,
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.message-text h1 { font-size: 1.8em; }
+.message-text h2 { font-size: 1.5em; }
+.message-text h3 { font-size: 1.3em; }
+.message-text h4 { font-size: 1.1em; }
+
+.message-text p {
+    margin-bottom: var(--spacing-sm);
+}
+
+.message-text ul,
+.message-text ol {
+    margin-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.message-text li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.message-text code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.message-text pre {
+    background-color: #f6f8fa;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    overflow-x: auto;
+    margin-bottom: var(--spacing-sm);
+}
+
+.message-text pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.9em;
+}
+
+.message-text blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: var(--spacing-md);
+    margin-left: 0;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.message-text table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+}
+
+.message-text table th,
+.message-text table td {
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-sm);
+    text-align: left;
+}
+
+.message-text table th {
+    background-color: var(--bg-main);
+    font-weight: 700;
+}
+
+.message-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.message-text a:hover {
+    text-decoration: underline;
+}
+
+.message-text hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: var(--spacing-md) 0;
+}
+
+/* 数式（KaTeX）のスタイリング */
+.message-text .katex {
+    font-size: 1.1em;
+}
+
+.message-text .katex-display {
+    margin: var(--spacing-md) 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* ===========================
+   アシスタント応答セクション
+   =========================== */
+
+.response-section {
+    margin-top: var(--spacing-md);
+}
+
+.response-section:first-child {
+    margin-top: 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.toggle-button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 13px;
+    color: var(--primary-color);
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.section-content {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+}
+
+/* ワーカー回答セクション */
+.workers-section .section-content {
+    background-color: var(--bg-worker);
+}
+
+.worker-list {
+    display: none; /* デフォルトで非表示 */
+}
+
+.worker-list.visible {
+    display: block;
+}
+
+.worker-item {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.worker-item:last-child {
+    margin-bottom: 0;
+}
+
+.worker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.worker-name {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.worker-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.worker-response {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+/* Markdownコンテンツ（ワーカー回答用） */
+.worker-response h1,
+.worker-response h2,
+.worker-response h3,
+.worker-response h4,
+.worker-response h5,
+.worker-response h6 {
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 700;
+}
+
+.worker-response code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.85em;
+}
+
+.worker-response pre {
+    background-color: #f6f8fa;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: var(--spacing-sm);
+    overflow-x: auto;
+    margin: var(--spacing-xs) 0;
+}
+
+.worker-response pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.worker-error {
+    color: var(--error-color);
+    font-style: italic;
+}
+
+/* レビューセクション */
+.review-section .section-content {
+    background-color: var(--bg-review);
+    border-color: #ffe082;
+}
+
+.review-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+/* Markdownコンテンツ（レビュー用） */
+.review-text h1,
+.review-text h2,
+.review-text h3,
+.review-text h4 {
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 700;
+}
+
+.review-text code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.review-text pre {
+    background-color: #f6f8fa;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: var(--spacing-sm);
+    overflow-x: auto;
+}
+
+.review-text pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* 最終回答セクション */
+.final-section .section-title {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.final-section .section-content {
+    background-color: var(--bg-final);
+    border: 2px solid #fff59d;
+    padding: var(--spacing-lg);
+}
+
+.final-answer {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.7;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+/* Markdownコンテンツ（最終回答用） */
+.final-answer h1,
+.final-answer h2,
+.final-answer h3,
+.final-answer h4 {
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+}
+
+.final-answer code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.final-answer pre {
+    background-color: #f6f8fa;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    overflow-x: auto;
+    margin: var(--spacing-sm) 0;
+}
+
+.final-answer pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.final-answer ul,
+.final-answer ol {
+    margin-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.final-answer li {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* ===========================
+   エラーメッセージ
+   =========================== */
+
+.error-message {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    background-color: #ffebee;
+    border: 1px solid var(--error-color);
+    border-radius: var(--border-radius);
+    color: var(--error-color);
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.error-message strong {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+/* ===========================
+   入力エリア
+   =========================== */
+
+.input-area {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-white);
+    padding: var(--spacing-md) var(--spacing-xl);
+}
+
+.chat-form {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.user-input {
+    flex: 1;
+    padding: var(--spacing-md);
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.user-input:focus {
+    border-color: var(--primary-color);
+}
+
+.user-input:disabled {
+    background-color: var(--bg-main);
+    cursor: not-allowed;
+}
+
+.send-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 100px;
+    justify-content: center;
+}
+
+.send-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.send-button:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-button.loading {
+    background: var(--warning-color);
+}
+
+.send-button.loading .button-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.input-info {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-xs);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ===========================
+   メタデータ表示
+   =========================== */
+
+.metadata {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-main);
+    border-radius: 4px;
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* ===========================
+   レスポンシブデザイン
+   =========================== */
+
+@media (max-width: 1024px) {
+    .container {
+        max-width: 100%;
+    }
+    
+    .message-content {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .subtitle {
+        font-size: 13px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: stretch;
+    }
+    
+    .chat-container {
+        padding: var(--spacing-md);
+    }
+    
+    .message-content {
+        max-width: 85%;
+    }
+    
+    .input-area {
+        padding: var(--spacing-md);
+    }
+    
+    .chat-form {
+        flex-direction: column;
+    }
+    
+    .send-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: var(--spacing-md);
+    }
+    
+    .header h1 {
+        font-size: 20px;
+    }
+    
+    .message-content {
+        max-width: 90%;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+}
+
+/* ===========================
+   スクロールバーのカスタマイズ
+   =========================== */
+
+.chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background-color: var(--bg-main);
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+}
