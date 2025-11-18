@@ -7,10 +7,10 @@ FastAPI APIルーターモジュール
 
 import logging
 import time
-from typing import Dict, List
+from typing import Dict, List, Optional, Literal
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .config_manager import Config, get_agent_summary
 from .agent_manager import call_workers_parallel, call_reviewer, parse_review_response
@@ -25,6 +25,21 @@ router = APIRouter()
 
 # リクエスト/レスポンスのスキーマ定義
 
+class ChatMessage(BaseModel):
+    """
+    会話メッセージ（user/assistant/system）
+    """
+    role: Literal["system", "user", "assistant"] = Field(..., description="メッセージの役割")
+    content: str = Field(..., min_length=1, max_length=20000, description="本文")
+
+    @model_validator(mode="after")
+    def _strip(self) -> "ChatMessage":
+        self.content = self.content.strip()
+        if not self.content:
+            raise ValueError("contentは空にできません")
+        return self
+
+
 class GenerateRequest(BaseModel):
     """
     /generate エンドポイントへのリクエストスキーマ
@@ -32,12 +47,19 @@ class GenerateRequest(BaseModel):
     Attributes:
         prompt: ユーザーからの質問テキスト
     """
-    prompt: str = Field(
-        ...,
-        description="ユーザーからの質問テキスト",
-        min_length=1,
-        max_length=10000
+    prompt: Optional[str] = Field(None, description="単発の質問を送る場合に使用", min_length=1, max_length=10000)
+    messages: Optional[List[ChatMessage]] = Field(
+        default=None,
+        description="会話履歴（最新はuserの質問）"
     )
+
+    @model_validator(mode="after")
+    def _validate_payload(self) -> "GenerateRequest":
+        if not self.prompt and not self.messages:
+            raise ValueError("prompt か messages のどちらかを指定してください")
+        if self.messages and self.messages[-1].role != "user":
+            raise ValueError("messagesの最後はuserである必要があります")
+        return self
 
 
 class WorkerResponseItem(BaseModel):
@@ -136,8 +158,14 @@ async def generate(request: GenerateRequest) -> GenerateResponse:
             detail="サーバー設定が初期化されていません"
         )
     
-    user_prompt = request.prompt
-    logger.info(f"リクエスト受信 - プロンプト長: {len(user_prompt)}文字")
+    # 会話メッセージの正規化
+    if request.messages:
+        conversation = [m.model_dump() for m in request.messages]
+    else:
+        conversation = [{"role": "user", "content": request.prompt.strip()}]
+
+    user_prompt = conversation[-1]["content"]
+    logger.info("リクエスト受信 - 会話長: %s, 最終プロンプト: %s文字", len(conversation), len(user_prompt))
     
     start_time = time.time()
     
@@ -146,7 +174,7 @@ async def generate(request: GenerateRequest) -> GenerateResponse:
         logger.info("=== ステップ1: ワーカーへの並列リクエスト開始 ===")
         worker_responses = await call_workers_parallel(
             _config.worker_agents,
-            user_prompt
+            conversation
         )
         
         # 成功/失敗のカウント
@@ -168,13 +196,15 @@ async def generate(request: GenerateRequest) -> GenerateResponse:
         
         # ステップ2: レビュープロンプトを生成
         logger.info("=== ステップ2: レビュープロンプト生成 ===")
-        review_prompt = generate_review_prompt(user_prompt, worker_responses)
+        # 過去のuser/assistantのみを履歴としてレビューワーに提示
+        history = [m for m in conversation[:-1] if m["role"] in {"user", "assistant"}]
+        review_prompt = generate_review_prompt(user_prompt, worker_responses, conversation_history=history)
         
         # ステップ3: レビューワーに送信
         logger.info("=== ステップ3: レビューワーへのリクエスト ===")
         reviewer_response = await call_reviewer(
             _config.reviewer_agent,
-            review_prompt
+            messages=[{"role": "user", "content": review_prompt}]
         )
         
         # レビューワーが失敗した場合はエラー

@@ -166,10 +166,32 @@ def main():
     # 2. エージェント一覧の取得
     test_get_agents()
     
-    # 3. マルチエージェント処理のテスト
+    # 3. マルチエージェント処理のテスト（単発質問）
     # 簡単な質問で試す
     test_prompt = "Pythonの主な特徴を3つ教えてください。"
     test_generate(test_prompt)
+    
+    # 4. 会話履歴を用いたテスト
+    print("\n" + "=" * 60)
+    print("🗂️ 会話履歴を用いたテスト")
+    print("=" * 60)
+    messages = [
+        {"role": "user", "content": "Pythonとは何ですか？"},
+        {"role": "assistant", "content": "Pythonは汎用プログラミング言語で、読みやすさと豊富なエコシステムが特徴です。"},
+        {"role": "user", "content": "初心者向けに特徴を3つ、箇条書きで教えてください。"}
+    ]
+    try:
+        response = requests.post(
+            f"{BASE_URL}/generate",
+            json={"messages": messages},
+            timeout=180
+        )
+        response.raise_for_status()
+        data = response.json()
+        print("\n🎯 最終回答\n" + "-" * 60)
+        print(data['final_answer'])
+    except requests.RequestException as e:
+        print(f"❌ エラー: {e}")
     
     print("\n" + "=" * 60)
     print("✅ テスト完了")

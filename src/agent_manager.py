@@ -69,7 +69,7 @@ class AgentResponse:
 
 async def call_ollama_api(
     agent_config: AgentConfig,
-    prompt: str,
+    messages: List[Dict[str, str]],
     client: httpx.AsyncClient
 ) -> AgentResponse:
     """
@@ -77,7 +77,7 @@ async def call_ollama_api(
     
     Args:
         agent_config: エージェント設定
-        prompt: ユーザーのプロンプト
+        messages: Ollamaへ渡す会話メッセージ（最新がユーザー質問）
         client: 非同期HTTPクライアント
         
     Returns:
@@ -89,9 +89,7 @@ async def call_ollama_api(
     # Ollama APIのリクエストボディを構築
     request_body = {
         "model": agent_config.model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "messages": messages,
         "stream": False  # ストリーミングは無効
     }
     
@@ -183,14 +181,14 @@ async def call_ollama_api(
 
 async def call_workers_parallel(
     worker_configs: List[AgentConfig],
-    prompt: str
+    messages: List[Dict[str, str]]
 ) -> List[AgentResponse]:
     """
     複数のワーカーエージェントに並列でリクエストを送信
     
     Args:
         worker_configs: ワーカーエージェント設定のリスト
-        prompt: ユーザーのプロンプト
+        messages: Ollamaへ渡す会話メッセージ
         
     Returns:
         全ワーカーからのレスポンスのリスト
@@ -201,8 +199,9 @@ async def call_workers_parallel(
     # 非同期HTTPクライアントを作成
     async with httpx.AsyncClient() as client:
         # 全ワーカーへのタスクを作成
+        # 各ワーカーには独立したメッセージリストを渡す
         tasks = [
-            call_ollama_api(worker_config, prompt, client)
+            call_ollama_api(worker_config, list(messages), client)
             for worker_config in worker_configs
         ]
         
@@ -223,14 +222,14 @@ async def call_workers_parallel(
 
 async def call_reviewer(
     reviewer_config: AgentConfig,
-    review_prompt: str
+    messages: List[Dict[str, str]]
 ) -> AgentResponse:
     """
     レビューワーエージェントにリクエストを送信
     
     Args:
         reviewer_config: レビューワーエージェント設定
-        review_prompt: レビュー用プロンプト
+        messages: レビューワーへ渡す会話メッセージ
         
     Returns:
         レビューワーからのレスポンス
@@ -239,7 +238,7 @@ async def call_reviewer(
     
     # 非同期HTTPクライアントを作成
     async with httpx.AsyncClient() as client:
-        response = await call_ollama_api(reviewer_config, review_prompt, client)
+        response = await call_ollama_api(reviewer_config, messages, client)
     
     if response.is_success:
         logger.info(f"レビューワー実行成功 - 処理時間: {response.processing_time:.2f}秒")
@@ -314,11 +313,14 @@ if __name__ == "__main__":
         try:
             config = load_config("config.json")
             test_prompt = "Pythonの特徴を3つ教えてください。"
+            test_messages = [
+                {"role": "user", "content": test_prompt}
+            ]
             
             print("\n=== ワーカーテスト ===")
             responses = await call_workers_parallel(
                 config.worker_agents,
-                test_prompt
+                test_messages
             )
             
             for resp in responses:

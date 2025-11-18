@@ -6,7 +6,7 @@
 """
 
 import logging
-from typing import List
+from typing import List, Dict, Optional
 
 from .agent_manager import AgentResponse
 
@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 def generate_review_prompt(
     user_prompt: str,
-    worker_responses: List[AgentResponse]
+    worker_responses: List[AgentResponse],
+    conversation_history: Optional[List[Dict[str, str]]] = None
 ) -> str:
     """
     レビューワーエージェント用のプロンプトを生成
@@ -35,15 +36,33 @@ def generate_review_prompt(
     """
     logger.info("レビュープロンプトを生成中...")
     
-    # プロンプトの前半部分（システムロールと質問）
+    # プロンプトの前半部分（方針と会話履歴概要）
     prompt_parts = [
-        "あなたはAIのチーフ・レビューワーです。以下のユーザーの質問に対し、複数のAIワーカーが回答しました。",
-        "",
+        "あなたはAIのチーフ・レビューワーです。以下のユーザーの質問に対し、複数のAIワーカーが回答しました。"
+    ]
+
+    if conversation_history:
+        prompt_parts.extend([
+            "",
+            "# これまでの要約された会話履歴:",
+        ])
+        for msg in conversation_history:
+            role = msg.get("role", "user")
+            label = {
+                "user": "ユーザー",
+                "assistant": "最終回答",
+                "system": "システム"
+            }.get(role, role)
+            prompt_parts.append(f"[{label}]")
+            prompt_parts.append(msg.get("content", ""))
+            prompt_parts.append("")
+
+    prompt_parts.extend([
         "# ユーザーの質問:",
         user_prompt,
         "",
         "# ワーカーの回答群:"
-    ]
+    ])
     
     # 各ワーカーの回答を追加
     for i, response in enumerate(worker_responses, 1):
