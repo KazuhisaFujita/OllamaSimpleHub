@@ -17,7 +17,7 @@
     --error-color: #d9534f;
     --warning-color: #f0ad4e;
     
-    /* 背景色（ライトモード） */
+    /* 背景色 */
     --bg-main: #f5f7fa;
     --bg-white: #ffffff;
     --bg-user: #e3f2fd;
@@ -26,7 +26,7 @@
     --bg-review: #fff9e6;
     --bg-final: #fffde7;
     
-    /* テキスト色（ライトモード） */
+    /* テキスト色 */
     --text-primary: #333333;
     --text-secondary: #666666;
     --text-muted: #999999;
@@ -48,39 +48,6 @@
     --spacing-xl: 32px;
 }
 
-/* ダークモード */
-[data-theme="dark"] {
-    /* カラーパレット（ダークモード用に調整） */
-    --primary-color: #5ca3f5;
-    --primary-dark: #4a90e2;
-    --secondary-color: #9d8dff;
-    --success-color: #6bc96b;
-    --error-color: #ff6b6b;
-    --warning-color: #ffc266;
-    
-    /* 背景色（ダークモード） */
-    --bg-main: #1a1a1a;
-    --bg-white: #2d2d2d;
-    --bg-user: #2c3e50;
-    --bg-assistant: #252525;
-    --bg-worker: #2a2a2a;
-    --bg-review: #3a3420;
-    --bg-final: #2a2a2a;
-    
-    /* テキスト色（ダークモード） */
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #808080;
-    
-    /* ボーダー（ダークモード） */
-    --border-color: #404040;
-    
-    /* シャドウ（ダークモード） */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
-}
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
                  'Helvetica Neue', Arial, sans-serif;
@@ -89,7 +56,6 @@ body {
     color: var(--text-primary);
     background-color: var(--bg-main);
     overflow: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ===========================
@@ -114,13 +80,8 @@ body {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     padding: var(--spacing-lg) var(--spacing-xl);
-    box-shadow: var(--shadow-md);
     text-align: center;
-    position: relative;
-}
-
-.header-left {
-    /* 削除 */
+    box-shadow: var(--shadow-md);
 }
 
 .header h1 {
@@ -132,30 +93,6 @@ body {
 .subtitle {
     font-size: 14px;
     opacity: 0.95;
-}
-
-/* テーマ切り替えボタン */
-.theme-toggle {
-    position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
 }
 
 /* ===========================

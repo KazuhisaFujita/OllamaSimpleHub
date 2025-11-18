@@ -11,8 +11,12 @@
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 const API_TIMEOUT = 300000; // 300秒（5分）
 
-// 会話履歴（final_answerのみを保持）
+// LocalStorage キー
+const STORAGE_KEY = 'ollamaSimpleHub_chatHistory';
+
+// 会話履歴（完全な会話履歴を保持）
 let messages = [];
+let conversationHistory = []; // UI表示用の完全な履歴
 
 // DOM要素
 let chatContainer;
@@ -23,6 +27,7 @@ let resetButton;
 let statusText;
 let statusDot;
 let charCount;
+let themeToggle;
 
 // ===========================
 // 初期化
@@ -38,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     statusText = document.getElementById('status-text');
     statusDot = document.querySelector('.status-dot');
     charCount = document.getElementById('char-count');
+    themeToggle = document.getElementById('theme-toggle');
+    
+    // テーマの初期化
+    initializeTheme();
 
     // marked.jsの設定
     if (typeof marked !== 'undefined') {
@@ -53,9 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', handleSubmit);
     resetButton.addEventListener('click', handleReset);
     userInput.addEventListener('input', handleInput);
+    themeToggle.addEventListener('click', toggleTheme);
 
     // 初期状態の設定
     updateSendButtonState();
+    
+    // 会話履歴を復元
+    loadChatHistory();
     
     // APIサーバーの接続チェック
     checkServerConnection();
@@ -97,6 +110,9 @@ async function handleSubmit(event) {
             role: 'assistant',
             content: response.final_answer
         });
+        
+        // LocalStorageに保存
+        saveChatHistory();
 
     } catch (error) {
         console.error('API通信エラー:', error);
@@ -117,6 +133,10 @@ function handleReset() {
 
     // 会話履歴をクリア
     messages = [];
+    conversationHistory = [];
+    
+    // LocalStorageからも削除
+    localStorage.removeItem(STORAGE_KEY);
 
     // チャットコンテナをクリア
     chatContainer.innerHTML = `
@@ -250,6 +270,16 @@ function appendUserMessage(content) {
         role: 'user',
         content: content
     });
+    
+    // UI表示用履歴に追加
+    conversationHistory.push({
+        type: 'user',
+        content: content,
+        timestamp: new Date().toISOString()
+    });
+    
+    // LocalStorageに保存
+    saveChatHistory();
 }
 
 /**
@@ -294,12 +324,15 @@ function appendAssistantMessage(response) {
                 </div>
             </div>
 
-            <!-- セクション2: レビューワーの評価（常時表示） -->
+            <!-- セクション2: レビューワーの評価（開閉式） -->
             <div class="response-section review-section">
                 <div class="section-header">
-                    <h3 class="section-title">🤖 レビューワーの評価</h3>
+                    <h3 class="section-title">📝 レビューワーの評価</h3>
+                    <button class="toggle-button" onclick="toggleReviewSection(this)">
+                        ▶ 詳細を表示
+                    </button>
                 </div>
-                <div class="section-content">
+                <div class="review-content">
                     <div class="review-text">${renderMarkdown(review_comment)}</div>
                 </div>
             </div>
@@ -333,6 +366,16 @@ function appendAssistantMessage(response) {
 
     chatContainer.appendChild(messageDiv);
     scrollToBottom();
+    
+    // UI表示用履歴に追加
+    conversationHistory.push({
+        type: 'assistant',
+        content: final_answer,
+        workers: worker_responses,
+        review: review_comment,
+        metadata: metadata,
+        timestamp: new Date().toISOString()
+    });
 }
 
 /**
@@ -360,6 +403,22 @@ function toggleWorkerList(button) {
     workerList.classList.toggle('visible');
     
     if (workerList.classList.contains('visible')) {
+        button.textContent = '▼ 詳細を隠す';
+    } else {
+        button.textContent = '▶ 詳細を表示';
+    }
+}
+
+/**
+ * レビューセクションの表示/非表示を切り替え
+ */
+function toggleReviewSection(button) {
+    const reviewSection = button.closest('.review-section');
+    const reviewContent = reviewSection.querySelector('.review-content');
+    
+    reviewContent.classList.toggle('visible');
+    
+    if (reviewContent.classList.contains('visible')) {
         button.textContent = '▼ 詳細を隠す';
     } else {
         button.textContent = '▶ 詳細を表示';
@@ -504,5 +563,204 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===========================
+// 会話履歴の永続化
+// ===========================
+
+/**
+ * 会話履歴をLocalStorageに保存
+ */
+function saveChatHistory() {
+    try {
+        const data = {
+            messages: messages,
+            conversationHistory: conversationHistory,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+        console.error('会話履歴の保存に失敗:', error);
+    }
+}
+
+/**
+ * 会話履歴をLocalStorageから読み込み
+ */
+function loadChatHistory() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        
+        const data = JSON.parse(saved);
+        messages = data.messages || [];
+        conversationHistory = data.conversationHistory || [];
+        
+        // 会話履歴を画面に復元
+        if (conversationHistory.length > 0) {
+            // ウェルカムメッセージを削除
+            const welcomeMessage = chatContainer.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            // 各メッセージを復元
+            conversationHistory.forEach(item => {
+                if (item.type === 'user') {
+                    appendUserMessageFromHistory(item.content);
+                } else if (item.type === 'assistant') {
+                    appendAssistantMessageFromHistory(item);
+                }
+            });
+            
+            scrollToBottom();
+            console.log('会話履歴を復元しました:', messages.length, 'メッセージ');
+        }
+    } catch (error) {
+        console.error('会話履歴の読み込みに失敗:', error);
+        localStorage.removeItem(STORAGE_KEY);
+    }
+}
+
+/**
+ * 履歴からユーザーメッセージを追加（LocalStorage保存なし）
+ */
+function appendUserMessageFromHistory(content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user';
+
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="message-label">
+                👤 あなた
+            </div>
+            <div class="message-text">${escapeHtml(content)}</div>
+        </div>
+    `;
+
+    chatContainer.appendChild(messageDiv);
+}
+
+/**
+ * 履歴からアシスタントメッセージを追加（LocalStorage保存なし）
+ */
+function appendAssistantMessageFromHistory(item) {
+    const { content, workers = [], review = '', metadata = {} } = item;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant';
+
+    // ワーカー応答のHTML生成（APIレスポンスの構造に対応）
+    const workersHtml = workers.map((worker, index) => `
+        <div class="worker-item">
+            <div class="worker-header">
+                <span class="worker-name">🤖 ${escapeHtml(worker.agent_name || worker.name || 'Worker')}</span>
+                <span class="worker-time">${(worker.processing_time || 0).toFixed(2)}秒</span>
+            </div>
+            <div class="worker-response ${(worker.is_success !== undefined ? worker.is_success : worker.success) ? '' : 'worker-error'}">
+                ${(worker.is_success !== undefined ? worker.is_success : worker.success) 
+                    ? renderMarkdown(worker.response) 
+                    : escapeHtml(worker.error || worker.response)}
+            </div>
+        </div>
+    `).join('');
+
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="message-label">
+                🤖 AI アシスタント
+            </div>
+
+            <!-- セクション1: ワーカーの応答（開閉式） -->
+            <div class="response-section workers-section">
+                <div class="section-header">
+                    <h3 class="section-title">🧠 各ワーカーの回答</h3>
+                    <button class="toggle-button" onclick="toggleWorkerList(this)">
+                        ▶ 詳細を表示
+                    </button>
+                </div>
+                <div class="worker-list">
+                    ${workersHtml}
+                </div>
+            </div>
+
+            <!-- セクション2: レビューワーの評価（開閉式） -->
+            <div class="response-section review-section">
+                <div class="section-header">
+                    <h3 class="section-title">🔍 レビューワーの評価</h3>
+                    <button class="toggle-button" onclick="toggleReviewSection(this)">
+                        ▶ 詳細を表示
+                    </button>
+                </div>
+                <div class="review-content">
+                    <div class="review-text">${renderMarkdown(review)}</div>
+                </div>
+            </div>
+
+            <!-- セクション3: 最終回答（常時表示） -->
+            <div class="response-section final-section">
+                <div class="section-header">
+                    <h3 class="section-title">💡 最終回答</h3>
+                </div>
+                <div class="section-content">
+                    <div class="final-answer">${renderMarkdown(content)}</div>
+                </div>
+            </div>
+
+            <!-- メタデータ -->
+            ${metadata.processing_time_seconds ? `
+            <div class="metadata">
+                <div class="metadata-item">
+                    <span>⏱️ 処理時間: ${metadata.processing_time_seconds.toFixed(2)}秒</span>
+                </div>
+                <div class="metadata-item">
+                    <span>✅ 成功: ${metadata.successful_workers}/${metadata.total_workers}</span>
+                </div>
+                ${metadata.failed_workers > 0 ? `
+                    <div class="metadata-item">
+                        <span>❌ 失敗: ${metadata.failed_workers}</span>
+                    </div>
+                ` : ''}
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+    chatContainer.appendChild(messageDiv);
+}
+
+// ===========================
+// テーマ管理
+// ===========================
+
+/**
+ * テーマを初期化
+ */
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('ollamaSimpleHub_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+/**
+ * テーマを切り替え
+ */
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('ollamaSimpleHub_theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+/**
+ * テーマアイコンを更新
+ */
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('.theme-icon');
+    icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+}
+
 // グローバルスコープに公開（HTML内のonclick属性で使用）
 window.toggleWorkerList = toggleWorkerList;
+window.toggleReviewSection = toggleReviewSection;
