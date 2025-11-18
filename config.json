@@ -1,0 +1,33 @@
+{
+  "reviewer_agent": {
+    "name": "Reviewer (gemma3n:e2b)",
+    "api_url": "http://localhost:11434/api/chat",
+    "model": "gemma3n:e2b",
+    "timeout": 120
+  },
+  "worker_agents": [
+    {
+      "name": "Worker A (gemma3n:e2b)",
+    "api_url": "http://localhost:11434/api/chat",
+    "model": "gemma3n:e2b",
+      "timeout": 60
+    },
+    {
+      "name": "Worker B (gemma3n:e2b)",
+    "api_url": "http://localhost:11434/api/chat",
+    "model": "gemma3n:e2b",
+      "timeout": 60
+    },
+    {
+      "name": "Worker C (gemma3n:e2b)",
+    "api_url": "http://localhost:11434/api/chat",
+    "model": "gemma3n:e2b",
+      "timeout": 60
+    }
+  ],
+  "system_settings": {
+    "max_retries": 1,
+    "default_timeout": 60,
+    "stream": false
+  }
+}

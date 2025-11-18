@@ -1,0 +1,24 @@
+{
+  "reviewer_agent": {
+    "name": "Reviewer (Llama 3 70B)",
+    "api_url": "http://localhost:11434/api/chat",
+    "model": "llama3:70b",
+    "timeout": 120,
+    "description": "高性能なレビューワー。複数のワーカーの回答を評価・統合します。"
+  },
+  "worker_agents": [
+    {
+      "name": "Worker A (Llama 3 8B)",
+      "api_url": "http://localhost:11434/api/chat",
+      "model": "llama3:8b",
+      "timeout": 60,
+      "description": "汎用的な回答を生成するワーカー"
+    }
+  ],
+  "system_settings": {
+    "max_retries": 1,
+    "default_timeout": 60,
+    "stream": false,
+    "log_level": "INFO"
+  }
+}
